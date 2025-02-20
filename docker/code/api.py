@@ -1,9 +1,12 @@
-from flask import Flask, request, send_file, jsonify
 import os
+from flask import Flask, request, send_file, jsonify
 import subprocess
 import uuid
 
 app = Flask(__name__)
+
+# Get port from environment variable, default to 5000 if not set
+port = os.getenv("PORT", 5000)
 
 UPLOAD_FOLDER = "/app/files/"
 OUTPUT_FOLDER = "/app/files/"
@@ -19,13 +22,14 @@ def convert():
         return jsonify({"error": "No selected file"}), 400
 
     # Validate file extension
-    if not file.filename.lower().endswith('.xlsx'):
-        return jsonify({"error": "Only .xlsx files are allowed"}), 400
+    allowed_extensions = ['.xlsx', '.xls', '.doc', '.docx']
+    if not any(file.filename.lower().endswith(ext) for ext in allowed_extensions):
+        return jsonify({"error": f"Only {', '.join(allowed_extensions)} files are allowed"}), 400
 
     # Generate a unique filename to avoid conflicts
-    unique_filename = f"{uuid.uuid4()}.xlsx"
+    unique_filename = f"{uuid.uuid4()}{os.path.splitext(file.filename)[1]}"
     input_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-    output_path = input_path.replace(".xlsx", ".pdf")
+    output_path = input_path.rsplit(".", 1)[0] + ".pdf"
 
     # Save the uploaded file
     file.save(input_path)
@@ -33,7 +37,7 @@ def convert():
     # Run the existing convert.py script
     try:
         result = subprocess.run(
-            ["python3", "/app/code/convert.py", input_path, output_path], 
+            ["python3", "/app/code/convert.py", input_path, output_path],
             check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
     except subprocess.CalledProcessError as e:
@@ -60,4 +64,4 @@ def health_check():
     return jsonify({"status": "healthy"}), 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=port)

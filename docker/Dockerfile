@@ -13,20 +13,28 @@ RUN apt-get update && apt-get upgrade -y && \
     python3 \
     python3-pip \
     python3-uno \
+    netcat-openbsd \
+    python3-flask \
+    gunicorn \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Flask
-RUN apt-get update && apt-get install -y python3-flask
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the conversion script and the API separately
+# Copy the conversion script, API, and the start.sh script
 COPY code/ /app/code/
+COPY start.sh /app/start.sh
 
-
-# Expose port 5000 for the API
+# Expose the default port for the API
 EXPOSE 5000
 
-# Start LibreOffice in headless mode and run the API
-CMD libreoffice --headless --accept="socket,host=localhost,port=2002;urp;StarOffice.ComponentContext" & sleep 5 && python3 /app/code/api.py
+# Make sure start.sh has execution permissions
+RUN chmod +x /app/start.sh
+
+# Set environment variables, including PYTHONPATH
+ENV PYTHONPATH="/app"
+ENV PORT=5000  
+# Default port to 5000, can be overridden with ENV variable
+
+# Start LibreOffice in headless mode and run the API using the start.sh script
+CMD ["/app/start.sh"]
