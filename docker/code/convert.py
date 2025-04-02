@@ -6,8 +6,8 @@ def export_pdf(input_file, output_file):
     # Detect the file type
     ext = os.path.splitext(input_file)[1].lower()
     
-    if ext not in ['.xlsx', '.doc', '.docx']:
-        raise ValueError(f"Unsupported file type: {ext}. Only .xlsx, .doc, and .docx are supported.")
+    if ext not in ['.xlsx', '.xls', '.doc', '.docx']:
+        raise ValueError(f"Unsupported file type: {ext}. Only .xlsx, xls, .doc, and .docx are supported.")
     
     try:
         local_context = uno.getComponentContext()
@@ -25,7 +25,7 @@ def export_pdf(input_file, output_file):
         )
 
         # Recalculate formulas for Excel files
-        if ext == '.xlsx':
+        if ext == '.xlsx' or ext == '.xls':
             document.calculateAll()
 
         # Export to PDF
