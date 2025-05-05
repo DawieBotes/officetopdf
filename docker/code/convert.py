@@ -1,8 +1,10 @@
 import sys
 import uno
 import os
+import re  # >>> MODIFIED <<<
 
-def export_pdf(input_file, output_file):
+
+def export_pdf(input_file, output_file, sheet_name=None):
     # Detect the file type
     ext = os.path.splitext(input_file)[1].lower()
     
@@ -25,8 +27,38 @@ def export_pdf(input_file, output_file):
         )
 
         # Recalculate formulas for Excel files
-        if ext == '.xlsx' or ext == '.xls':
-            document.calculateAll()
+        if ext in ['.xlsx', '.xls']:
+            
+
+            if sheet_name:
+                sheets = document.getSheets()
+                if not sheets.hasByName(sheet_name):
+                    raise ValueError(f"Sheet '{sheet_name}' not found in document.")
+                
+                # Add a temporary sheet to force state reset
+                temp_sheet_name = "TempSheet"
+                i = 0
+                while sheets.hasByName(temp_sheet_name):
+                    i += 1
+                    temp_sheet_name = f"TempSheet_{i}"
+
+                sheets.insertNewByName(temp_sheet_name, sheets.getCount())
+
+
+                # Hide all sheets first
+                for i in range(sheets.getCount()):
+                    sheet = sheets.getByIndex(i)
+                    sheet.setPropertyValue("IsVisible", False)
+
+                # Show only the target sheet
+                target_sheet = sheets.getByName(sheet_name)
+                target_sheet.setPropertyValue("IsVisible", True)
+
+                # Set target sheet as active
+                controller = document.getCurrentController()
+                controller.setActiveSheet(target_sheet)
+
+                document.calculateAll()
 
         # Export to PDF
         pdf_filter = uno.createUnoStruct("com.sun.star.beans.PropertyValue")
@@ -105,8 +137,10 @@ if __name__ == "__main__":
         else:
             input_file = sys.argv[1]
             output_file = sys.argv[2]
-            export_pdf(input_file, output_file)
+            sheet_name = sys.argv[3] if len(sys.argv) > 3 else None
+            export_pdf(input_file, output_file, sheet_name)
             print(f"Successfully converted {input_file} to {output_file}")
+
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)

@@ -12,4 +12,4 @@ done
 PORT=${PORT:-5000}
 
 # Run the API using Gunicorn, bind to the specified port
-exec gunicorn -w 4 -b 0.0.0.0:$PORT code.api:app
+exec gunicorn --timeout 300 -w 4 -b 0.0.0.0:$PORT code.api:app
