@@ -36,6 +36,7 @@ docker-compose up
 **Method:** `POST`  
 **Content-Type:** `multipart/form-data`  
 **Form field:** `file`
+**Query parameter (optional):** `sheet`
 
 **Supported formats:** `.doc`, `.docx`, `.xls`, `.xlsx`
 
@@ -43,6 +44,17 @@ docker-compose up
 
 ```bash
 curl -X POST http://localhost:5000/convert   -F "file=@/path/to/your/file.xlsx"   --output output.pdf
+```
+
+**Returns:** PDF version of the uploaded file
+
+---
+
+**Example with curl with specific sheet:**
+
+```bash
+curl -X POST "http://localhost:5000/convert?sheet=Sheet1" -F "file=@/path/to/your/file.xlsx" --output output.pdf
+
 ```
 
 **Returns:** PDF version of the uploaded file
